@@ -290,11 +290,12 @@ def sinkhorn_loop(
             ε, C_xy, (β_log + a_y / ε).detach()
         )
     
-    # For DomDec, we need the X-dual to be _exact_; otherwise mass in X-cells is not 
-    # preserved and the algorithm soon gets corrupted. To achieve this,
+    # For DomDec, we need the Y-dual to be _exact_; otherwise the Y-marginal of the 
+    # cell is not exact and we run into trouble. X marginal variations can be fixed 
+    # by the balancing process, so there's no problem on that side
     # we finish with an X iteration
     # TODO: is this compatible with gradients and so on?
-    a_y = λ * softmin(ε, C_yx, α_log + b_x / ε)  # OT(α,β) wrt. a
+    b_x = λ * softmin(ε, C_xy, (β_log + a_y / ε)  # OT(α,β) wrt. a
 
     if debias:
         return a_x, b_y, a_y, b_x
