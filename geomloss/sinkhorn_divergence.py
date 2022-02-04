@@ -279,16 +279,22 @@ def sinkhorn_loop(
 
     torch.autograd.set_grad_enabled(True)
 
-    if last_extrapolation:
-        # Last extrapolation, to get the correct gradients:
-        if debias:
-            a_x = λ * softmin(ε, C_xx, (α_log + a_x / ε).detach())
-            b_y = λ * softmin(ε, C_yy, (β_log + b_y / ε).detach())
+    # if last_extrapolation:
+    #     # Last extrapolation, to get the correct gradients:
+    #     if debias:
+    #         a_x = λ * softmin(ε, C_xx, (α_log + a_x / ε).detach())
+    #         b_y = λ * softmin(ε, C_yy, (β_log + b_y / ε).detach())
 
-        # The cross-updates should be done in parallel!
-        a_y, b_x = λ * softmin(ε, C_yx, (α_log + b_x / ε).detach()), λ * softmin(
-            ε, C_xy, (β_log + a_y / ε).detach()
-        )
+    #     # The cross-updates should be done in parallel!
+    #     a_y, b_x = λ * softmin(ε, C_yx, (α_log + b_x / ε).detach()), λ * softmin(
+    #         ε, C_xy, (β_log + a_y / ε).detach()
+    #     )
+    
+    # For DomDec, we need the X-dual to be _exact_; otherwise mass in X-cells is not 
+    # preserved and the algorithm soon gets corrupted. To achieve this,
+    # we finish with an X iteration
+    # TODO: is this compatible with gradients and so on?
+    a_y = λ * softmin(ε, C_yx, α_log + b_x / ε)  # OT(α,β) wrt. a
 
     if debias:
         return a_x, b_y, a_y, b_x
