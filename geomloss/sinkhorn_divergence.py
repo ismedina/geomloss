@@ -295,8 +295,8 @@ def sinkhorn_loop(
     # by the balancing process, so there's no problem on that side
     # we finish with an X iteration
     # TODO: is this compatible with gradients and so on?
-    #a_y = λ * softmin(ε, C_yx, (α_log + b_x / ε))
     b_x = λ * softmin(ε, C_xy, (β_log + a_y / ε)) 
+    a_y = λ * softmin(ε, C_yx, (α_log + b_x / ε))
 
     if debias:
         return a_x, b_y, a_y, b_x
