@@ -613,26 +613,33 @@ def sinkhorn_loop(
     # As detailed above (around "torch.autograd.set_grad_enabled(False)"),
     # this allows us to retrieve correct expressions for the gradient
     # without having to backprop through the whole Sinkhorn loop.
-    torch.autograd.set_grad_enabled(True)
+
+    # IM: turning off autograd until we understand what we want to do with it. 
+    # torch.autograd.set_grad_enabled(True)
+
+    # TODO: is this compatible with gradients and so on? Math the 
+    # needed `.detach()` pattern
 
     if last_extrapolation:
         # The cross-updates should be done in parallel!
         f_ba, g_ab = (
-            damping * softmin(eps, C_xy, (b_log + g_ab / eps).detach()),
-            damping * softmin(eps, C_yx, (a_log + f_ba / eps).detach()),
+            damping * softmin(eps, C_xy, (b_log + g_ab / eps)),
+            damping * softmin(eps, C_yx, (a_log + f_ba / eps)),
         )
+
+        if debias:
+            f_aa = damping * softmin(eps, C_xx, (a_log + f_aa / eps))
+            g_bb = damping * softmin(eps, C_yy, (b_log + g_bb / eps))
+
     
-    # For DomDec, we need the Y-dual to be _exact_; otherwise the Y-marginal of the 
+    # IM: For DomDec, we need the Y-dual to be _exact_; otherwise the Y-marginal of the 
     # cell is not exact and we run into trouble. X marginal variations can be fixed 
     # by the balancing process, so there's no problem on that side
     # we finish with an X iteration
-    # TODO: is this compatible with gradients and so on?
-    b_x = λ * softmin(ε, C_xy, (β_log + a_y / ε)) 
-    a_y = λ * softmin(ε, C_yx, (α_log + b_x / ε))
-
-        if debias:
-            f_aa = damping * softmin(eps, C_xx, (a_log + f_aa / eps).detach())
-            g_bb = damping * softmin(eps, C_yy, (b_log + g_bb / eps).detach())
+    # IM: I think that if autograd is True we could dettach in this last iteration 
+    # and the rest should work nicely.
+    f_ba = damping * softmin(eps, C_xy, (b_log + g_ab / eps)) 
+    g_ab = damping * softmin(eps, C_yx, (a_log + f_ba / eps))
 
     if debias:
         return f_aa, g_bb, g_ab, f_ba
