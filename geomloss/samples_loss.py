@@ -189,7 +189,6 @@ class SamplesLoss(Module):
         potentials=False,
         verbose=False,
         backend="auto",
-        a_init = 0,
     ):
 
         super(SamplesLoss, self).__init__()
@@ -207,7 +206,6 @@ class SamplesLoss(Module):
         self.debias = debias
         self.potentials = potentials
         self.verbose = verbose
-        self.a_init = a_init
 
     def forward(self, *args):
         """Computes the loss between sampled measures.
@@ -216,7 +214,6 @@ class SamplesLoss(Module):
         Until then, please check the tutorials :-)"""
 
         l_x, α, x, l_y, β, y = self.process_args(*args)
-        a = a_init
         B, N, M, D, l_x, α, l_y, β = self.check_shapes(l_x, α, x, l_y, β, y)
 
         backend = (
