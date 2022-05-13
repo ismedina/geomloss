@@ -361,6 +361,7 @@ def sinkhorn_online(
     debias=True,
     potentials=False,
     **kwargs,
+    a_init=0,
 ):
 
     B, N, D = x.shape
@@ -409,6 +410,7 @@ def sinkhorn_online(
         eps_list,
         rho,
         debias=debias,
+        a_init=a_init,
     )
 
     return sinkhorn_cost(
