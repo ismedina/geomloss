@@ -273,7 +273,7 @@ def sinkhorn_loop(
     extrapolate=None,
     debias=True,
     last_extrapolation=True,
-    a_init
+    a_init=0,
 ):
     r"""Implements the (possibly multiscale) symmetric Sinkhorn loop,
     with the epsilon-scaling (annealing) heuristic.
