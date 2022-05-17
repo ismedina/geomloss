@@ -283,7 +283,7 @@ class SamplesLoss(Module):
             labels_x=l_x,
             labels_y=l_y,
             verbose=self.verbose,
-            a_init = a_iinit,
+            a_init = self.a_init,
         )
 
         # Make sure that the output has the correct shape ------------------------------------
