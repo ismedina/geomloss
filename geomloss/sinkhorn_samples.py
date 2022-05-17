@@ -360,8 +360,9 @@ def sinkhorn_online(
     cost=None,
     debias=True,
     potentials=False,
-    **kwargs,
     a_init=0,
+    **kwargs,
+    
 ):
 
     B, N, D = x.shape
