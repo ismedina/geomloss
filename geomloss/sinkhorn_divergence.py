@@ -462,7 +462,6 @@ def sinkhorn_loop(
     #       - but in this implementation, we use "softmin" for the sake of simplicity.
     g_ab = damping * softmin(eps, C_yx, a_log)  # a -> b
     f_ba = a_init
-    Tensor.cpu(f_ba)
     #f_ba = damping * softmin(eps, C_xy, b_log)  # b -> a
     if debias:
         #f_aa = damping * softmin(eps, C_xx, a_log)  # a -> a
