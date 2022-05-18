@@ -409,7 +409,7 @@ def sinkhorn_online(
     print("const_iterations =",const_iterations) 
     if(const_iterations>0):
     	# TODO: use the np.full function instead of constructing an array whose values we are not going to use.
-        eps_list = np.arange(const_iterations)
+        eps_list = np.arange(const_iterations, dtype = np.float64)
         eps_list.fill(2*(blur**2))
     print(eps_list)
 
