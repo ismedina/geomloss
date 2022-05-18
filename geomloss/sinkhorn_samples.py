@@ -410,7 +410,7 @@ def sinkhorn_online(
     if(const_iterations>0):
     	# TODO: use the np.full function instead of constructing an array whose values we are not going to use.
         eps_list = np.arange(const_iterations, dtype = np.float64)
-        eps_list.fill(2*(blur**2))
+        eps_list.fill(blur**2) # Geomloss epsilon is blur**p
     print(eps_list)
 
     f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
