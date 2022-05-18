@@ -405,13 +405,10 @@ def sinkhorn_online(
     diameter, eps, eps_list, rho = scaling_parameters(
         x, y, p, blur, reach, diameter, scaling
     )
-    print(eps_list)
-    print("const_iterations =",const_iterations) 
     if(const_iterations>0):
     	# TODO: use the np.full function instead of constructing an array whose values we are not going to use.
         eps_list = np.arange(const_iterations, dtype = np.float64)
         eps_list.fill(blur**2) # Geomloss epsilon is blur**p
-    print(eps_list)
 
     f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
         softmin,

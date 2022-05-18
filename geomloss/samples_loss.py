@@ -266,7 +266,6 @@ class SamplesLoss(Module):
             α, x, β, y = α.unsqueeze(0), x.unsqueeze(0), β.unsqueeze(0), y.unsqueeze(0)
 
         # Run --------------------------------------------------------------------------------
-        print("Samples loss", self.const_iterations)
         values = routines[self.loss][backend](
             α,
             x,
