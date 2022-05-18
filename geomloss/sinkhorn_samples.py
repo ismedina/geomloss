@@ -361,7 +361,7 @@ def sinkhorn_online(
     debias=True,
     potentials=False,
     a_init=0,
-    const_iterations=0
+    const_iterations=0,
     **kwargs,
     
 ):
