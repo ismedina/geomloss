@@ -361,6 +361,7 @@ def sinkhorn_online(
     debias=True,
     potentials=False,
     a_init=0,
+    const_iterations=0
     **kwargs,
     
 ):
@@ -399,6 +400,10 @@ def sinkhorn_online(
     diameter, eps, eps_list, rho = scaling_parameters(
         x, y, p, blur, reach, diameter, scaling
     )
+    if(const_iterations>0){
+        eps_list = np.arange(const_iterations)
+        eps_list.fill(eps)
+    }
 
     f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
         softmin,
