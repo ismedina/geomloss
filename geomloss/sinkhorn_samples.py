@@ -347,6 +347,12 @@ def softmin_online(eps, C_xy, h_y, log_conv=None):
     return out.view(B, -1) if batch else out.view(1, -1)
 
 
+# TODO: Set default value of `const_iterations` to `None`. This is common practice in Python
+# when no meaningful default value can be given (as in this case, where the behavior changes if
+# we don't provide a number, and the epsilon scaling is then run). 
+# TODO: I would suggest to replace the name of the variable `const_iterations` 
+# by `max_iter` in all functions, to match the name of the variable in the
+# original domdec library. 
 def sinkhorn_online(
     a,
     x,
@@ -400,10 +406,12 @@ def sinkhorn_online(
     diameter, eps, eps_list, rho = scaling_parameters(
         x, y, p, blur, reach, diameter, scaling
     )
+    print(eps_list)
     if(const_iterations>0):
+    	# TODO: use the np.full function instead of constructing an array whose values we are not going to use.
         eps_list = np.arange(const_iterations)
         eps_list.fill(2*(blur**2))
-    
+    print(eps_list[1])
 
     f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
         softmin,
