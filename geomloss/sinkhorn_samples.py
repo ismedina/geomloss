@@ -402,7 +402,7 @@ def sinkhorn_online(
     )
     if(const_iterations>0):
         eps_list = np.arange(const_iterations)
-        eps_list.fill(eps)
+        eps_list.fill(2*(blur**2))
     
 
     f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
