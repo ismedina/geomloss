@@ -350,9 +350,8 @@ def softmin_online(eps, C_xy, h_y, log_conv=None):
 # TODO: Set default value of `const_iterations` to `None`. This is common practice in Python
 # when no meaningful default value can be given (as in this case, where the behavior changes if
 # we don't provide a number, and the epsilon scaling is then run). 
-# TODO: I would suggest to replace the name of the variable `const_iterations` 
-# by `max_iter` in all functions, to match the name of the variable in the
-# original domdec library. 
+# TODO: I would suggest to change the name of the variable `const_iterations` 
+# to `max_iter`, to match the name of the variable in the original domdec library. 
 def sinkhorn_online(
     a,
     x,
