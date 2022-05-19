@@ -346,12 +346,6 @@ def softmin_online(eps, C_xy, h_y, log_conv=None):
 
     return out.view(B, -1) if batch else out.view(1, -1)
 
-
-# TODO: Set default value of `const_iterations` to `None`. This is common practice in Python
-# when no meaningful default value can be given (as in this case, where the behavior changes if
-# we don't provide a number, and the epsilon scaling is then run). 
-# TODO: I would suggest to change the name of the variable `const_iterations` 
-# to `max_iter`, to match the name of the variable in the original domdec library. 
 def sinkhorn_online(
     a,
     x,
@@ -366,7 +360,7 @@ def sinkhorn_online(
     debias=True,
     potentials=False,
     a_init=0,
-    const_iterations=0,
+    maxIter=None,
     **kwargs,
     
 ):
@@ -405,10 +399,10 @@ def sinkhorn_online(
     diameter, eps, eps_list, rho = scaling_parameters(
         x, y, p, blur, reach, diameter, scaling
     )
-    if(const_iterations>0):
-    	# TODO: use the np.full function instead of constructing an array whose values we are not going to use.
-        eps_list = np.arange(const_iterations, dtype = np.float64)
-        eps_list.fill(blur**2) # Geomloss epsilon is blur**p
+    
+    #replace epsilon scaling with constant epsilon over the maximum Iterations
+    if not maxIter is None:
+        eps_list = [blur**2]*maxIter
 
     f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
         softmin,
