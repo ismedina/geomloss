@@ -360,7 +360,7 @@ def sinkhorn_online(
     debias=True,
     potentials=False,
     a_init=0,
-    maxIter=None,
+    SinkhornMaxIter=None,
     **kwargs,
     
 ):
@@ -401,8 +401,8 @@ def sinkhorn_online(
     )
     
     #replace epsilon scaling with constant epsilon over the maximum Iterations
-    if not maxIter is None:
-        eps_list = [blur**2]*maxIter
+    if not SinkhornMaxIter is None:
+        eps_list = [blur**2]*SinkhornMaxIter
 
     f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
         softmin,
