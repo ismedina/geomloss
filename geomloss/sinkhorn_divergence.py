@@ -460,12 +460,14 @@ def sinkhorn_loop(
     #       a convolution with the cost function (i.e. the limit for eps=+infty).
     #       The algorithm was originally written with this convolution
     #       - but in this implementation, we use "softmin" for the sake of simplicity.
-    g_ab = damping * softmin(eps, C_yx, a_log)  # a -> b
+    #g_ab = damping * softmin(eps, C_yx, a_log)  # a -> b
     f_ba = a_init
     #f_ba = damping * softmin(eps, C_xy, b_log)  # b -> a
+    g_ab = damping * softmin(eps, C_yx, a_log + f_ba / eps)  # a -> b
+
     if debias:
-        #f_aa = damping * softmin(eps, C_xx, a_log)  # a -> a
-        f_aa = a_init
+        f_aa = damping * softmin(eps, C_xx, a_log)  # a -> a
+        # f_aa = a_init
         g_bb = damping * softmin(eps, C_yy, b_log)  # a -> a
 
     # Lines 4-5: eps-scaling descent ---------------------------------------------------
