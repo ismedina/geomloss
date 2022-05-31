@@ -193,7 +193,7 @@ def sinkhorn_divergence(
     )
 
 
-    def sinkhorn_divergence_two_grids(
+def sinkhorn_divergence_two_grids(
     a,
     b,
     p,
