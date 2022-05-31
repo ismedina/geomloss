@@ -1,5 +1,5 @@
 import torch
-from .utils import log_dens, pyramid, upsample, softmin_grid
+from .utils import log_dens, pyramid, upsample, softmin_grid, softmin_two_grids
 from .sinkhorn_divergence import epsilon_schedule, scaling_parameters
 from .sinkhorn_divergence import sinkhorn_cost, sinkhorn_loop
 
