@@ -279,3 +279,132 @@ def softmin_grid(eps, C_xy, h_y):
         )  # Act on dim 2
 
     return -eps * h_y
+
+
+def softmin_two_grids(eps, C_xy, h_y):
+    r"""Soft-C-transform, implemented using seperable KeOps operations, 
+    for potentials supported in grids.
+
+    This routine implements the (soft-)C-transform
+    between dual vectors, which is the core computation for
+    Auction- and Sinkhorn-like optimal transport solvers.
+
+    `eps` is the regularization of the softmin. `C_xy` is a tuple of the objects
+    `(p, dx, Ms)`, where `p` is the power of the cost function, `dx` the spacing
+    between gridpoints and `Ms` is the shape of the output data. 
+
+    The shape of the input grid is obtained from the last dimensions of `h_y`. 
+
+    `softmin_tensorized(eps, C_xy, h_y)` returns a dual potential
+    `f` for ":math:`f_i`", supported by the :math:`x_i`'s, that is equal to:
+
+    .. math::
+        f_i \gets - \varepsilon \log \sum_{j=1}^{\text{M}} \exp
+        \big[ h_j - C(x_i, y_j) / \varepsilon \big]~.
+
+    For more detail, see e.g. Section 3.3 and Eq. (3.186) in Jean Feydy's PhD thesis.
+
+    Args:
+        eps (float, positive): Temperature :math:`\varepsilon` for the Gibbs kernel
+            :math:`K_{i,j} = \exp(-C(x_i, y_j) / \varepsilon)`.
+
+        C_xy (tuple (int, float, tuple)): Encodes the implicit cost matrix :math:`C(x_i,y_j)`.
+        first item gives p-th power of the cost, second item is spacing between gridpoints, 
+        last item is the shape of the output grid, of the form (Mx, ), (Mx, My) or (Mx, My, Mz).
+
+        h_y ((B, Nx), (B, Nx, Ny) or (B, Nx, Ny, Nz) Tensor):
+            Grid of logarithmic "dual" values, with a batch dimension.
+            Most often, this image will be computed as `h_y = b_log + g_j / eps`,
+            where `b_log` is an array of log-weights :math:`\log(\beta_j)`
+            for the :math:`y_j`'s and :math:`g_j` is a dual variable
+            in the Sinkhorn algorithm, so that:
+
+            .. math::
+                f_i \gets - \varepsilon \log \sum_{j=1}^{\text{M}} \beta_j
+                \exp \tfrac{1}{\varepsilon} \big[ g_j - C(x_i, y_j) \big]~.
+
+    Returns:
+        (B, Mx), (B, Mx, My) or (B, Mx, My, Mz) Tensor: Dual potential `f` of values
+            :math:`f_i`, supported by the points :math:`x_i`.
+    """
+    D = dimension(h_y)
+    # B, K, N = h_y.shape[BATCH], h_y.shape[CHANNEL], h_y.shape[WIDTH]
+    B, K, *Ns = h_y.shape
+    
+    if not keops_available:
+        raise ImportError("This routine depends on the pykeops library.")
+
+    #x = torch.arange(N).type_as(h_y) / N
+    p, dx, Ms = C_xy
+
+    if p == 1: 
+        blur = eps
+    elif p == 2: 
+        blur = np.sqrt(2 * eps)
+    else:
+        raise NotImplementedError()
+
+    def softmin(a_log, axis): 
+        # `a_log` is data, `axis` is dimension along which we compute the softmin
+        a_log = a_log.contiguous()
+        M = Ms[axis]
+        N = Ns[axis]
+        a_log_j = LazyTensor(a_log.view(-1, 1, N, 1))
+        x_i = torch.arange(M).type_as(a_log) * (dx/blur) # Assume same spacing for input and output grids
+        x_j = torch.arange(N).type_as(a_log) * (dx/blur)
+        x_i = LazyTensor(x_i.view(1, M, 1, 1))
+        x_j = LazyTensor(x_j.view(1, 1, N, 1))
+        
+        if p == 1:
+            kA_log_ij = a_log_j - (x_i - x_j).abs()  # (B * Z, M, N, 1) # Z depends on which permutations were already performed
+        elif p == 2:
+            kA_log_ij = a_log_j - (x_i - x_j) ** 2  # (B * Z, M, N, 1)
+
+        kA_log = kA_log_ij.logsumexp(dim=2)  # (B * Z, M, 1)
+        
+        # The softmin is always performed along the last axis. This is because outside of this function the dimensions are permuted.
+        # The dimensions after the sofmin can be derived from the permutation pattern in the main function. 
+        if D == 1:
+            return kA_log.view(B, K, M)
+        
+        elif D == 2:
+            if axis == 1:
+                return kA_log.view(B, K, Ns[0], M)
+            else: # axis == 0
+                return kA_log.view(B, K, Ms[1], M)
+
+        elif D == 3:
+            if axis == 2:
+                return kA_log.view(B, K, Ns[0], Ns[1], M)
+            elif axis == 1:
+                return kA_log.view(B, K, Ns[0], Ms[2], M)
+            else: # axis == 0
+                return kA_log.view(B, K, Ms[2], Ms[1], M)
+                
+            #return kA_log.view(B, K, N, N, N)
+
+    if D == 1: 
+        h_y = softmin(h_y, 0)
+
+    elif D == 2:
+        # Below written sizes of the data in h_y
+        # (N0, N1)
+        h_y = softmin(h_y, 1)  # Act on lines
+        # (N0, M1)
+        h_y = softmin(h_y.permute([0, 1, 3, 2]), 0).permute([0, 1, 3, 2])  # Act on columns
+        # permutation -> (M1, N0) -> softmin -> (M1, M0) -> permutation -> (M0, M1)
+
+    elif D == 3:
+        # (N0, N1, N2)
+        h_y = softmin(h_y, 2)  # Act on dim 4
+        # (N0, N1, M2)
+        h_y = softmin(h_y.permute([0, 1, 2, 4, 3]), 1).permute(
+            [0, 1, 2, 4, 3]
+        )  # Act on dim 3
+        # p -> (N0, M2, N1) -> s -> (N0, M2, M1) -> p -> (N0, M1, M2)
+        h_y = softmin(h_y.permute([0, 1, 4, 3, 2]), 0).permute(
+            [0, 1, 4, 3, 2]
+        )  # Act on dim 2
+        # p -> (M2, M1, N0) -> s -> (M2, M1, M0) -> p -> (M0, M1, M2)
+
+    return -eps * h_y 
