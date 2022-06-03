@@ -206,7 +206,9 @@ def sinkhorn_divergence_two_grids(
     potentials=False,
     verbose=False,
     multiscale=True, # IM: Added multiscale argument, otherwise multiscale triggered automatically
-    dx=1, 
+    dx=1,
+    a_init=None,
+    sinkhornMaxIter=None,
     **kwargs,
 ):
     r"""Sinkhorn divergence between measures supported on 1D/2D/3D grids.
@@ -336,6 +338,9 @@ def sinkhorn_divergence_two_grids(
     assert (
         len(jumps) == len(a_s) - 1
     ), "There's a bug in the multicale pre-processing..."
+    
+    if not SinkhornMaxIter is None:
+        eps_list = [blur**2]*SinkhornMaxIter
 
     # Use an optimal transport solver to retrieve the dual potentials:
     f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
@@ -352,6 +357,7 @@ def sinkhorn_divergence_two_grids(
         kernel_truncation=None,
         extrapolate=None,
         debias=debias,
+        a_init=a_init,
     )
 
     # Optimal transport cost:
