@@ -273,7 +273,7 @@ def sinkhorn_loop(
     extrapolate=None,
     debias=True,
     last_extrapolation=True,
-    a_init=0,
+    a_init=None,
 ):
     r"""Implements the (possibly multiscale) symmetric Sinkhorn loop,
     with the epsilon-scaling (annealing) heuristic.
@@ -461,8 +461,10 @@ def sinkhorn_loop(
     #       The algorithm was originally written with this convolution
     #       - but in this implementation, we use "softmin" for the sake of simplicity.
     #g_ab = damping * softmin(eps, C_yx, a_log)  # a -> b
-    f_ba = a_init
-    #f_ba = damping * softmin(eps, C_xy, b_log)  # b -> a
+    if not a_init is None:
+        f_ba = a_init
+    else:
+        f_ba = damping * softmin(eps, C_xy, b_log)  # b -> a  
     g_ab = damping * softmin(eps, C_yx, a_log + f_ba / eps)  # a -> b
 
     if debias:
