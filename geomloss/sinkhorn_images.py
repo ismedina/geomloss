@@ -208,7 +208,7 @@ def sinkhorn_divergence_two_grids(
     multiscale=True, # IM: Added multiscale argument, otherwise multiscale triggered automatically
     dx=1,
     a_init=None,
-    sinkhornMaxIter=None,
+    SinkhornMaxIter=None,
     **kwargs,
 ):
     r"""Sinkhorn divergence between measures supported on 1D/2D/3D grids.
