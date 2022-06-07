@@ -464,7 +464,10 @@ def sinkhorn_loop(
     if not a_init is None:
         f_ba = a_init
     else:
+        print("test")
         f_ba = damping * softmin(eps, C_xy, b_log)  # b -> a  
+    print(len(a_log))
+    print(len(f_ba))
     g_ab = damping * softmin(eps, C_yx, a_log + f_ba / eps)  # a -> b
 
     if debias:
