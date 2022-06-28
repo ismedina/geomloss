@@ -344,7 +344,7 @@ def sinkhorn_divergence_two_grids(
         eps_list = [blur**2]*inner_iter
 
     # Use an optimal transport solver to retrieve the dual potentials:
-    f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
+    sinkhorn_error, potentials = sinkhorn_loop(
         softmin_two_grids,
         a_logs,
         b_logs,
@@ -361,8 +361,10 @@ def sinkhorn_divergence_two_grids(
         a_init=a_init,
     )
 
+    f_aa, g_bb, g_ab, f_ba = potentials
+
     # Optimal transport cost:
-    return sinkhorn_cost(
+    return sinkhorn_error, sinkhorn_cost(
         eps,
         rho,
         a,
