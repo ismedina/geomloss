@@ -648,7 +648,8 @@ def sinkhorn_loop(
     # IM: I think that if autograd is True we could dettach in this last iteration 
     # and the rest should work nicely.
     f_ba = damping * softmin(eps, C_xy, (b_log + g_ab / eps)) 
-    g_ab_prev = torch.copy(g_ab_prev) # Copy previous potential to compute error
+    g_ab_prev = torch.clone(g_ab_prev) # Copy previous potential to compute error
+    # g_ab_prev.detach(g_ab_prev) TODO: needed? It is already detached, right?
     g_ab = damping * softmin(eps, C_yx, (a_log + f_ba / eps))
     # sinkhorn_error = \sum_i b_i*|1 - v_i^k / v_i^{k+1}|
     sinkhorn_error = torch.sum(torch.exp(b_log)*torch.abs(1 - g_ab_prev/g_ab))
