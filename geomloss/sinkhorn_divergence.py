@@ -389,7 +389,9 @@ def sinkhorn_loop(
             Defaults to True.
 
     Returns:
-        4-uple of Tensors: The four optimal dual potentials
+        2-uple consisting of: 
+            * sinkhorn_error
+            * 4-uple of Tensors: The four optimal dual potentials
             `(f_aa, g_bb, g_ab, f_ba)` that are respectively
             supported by the first, second, second and first input measures
             and associated to the "a <-> a", "b <-> b",
@@ -644,9 +646,12 @@ def sinkhorn_loop(
     # IM: I think that if autograd is True we could dettach in this last iteration 
     # and the rest should work nicely.
     f_ba = damping * softmin(eps, C_xy, (b_log + g_ab / eps)) 
+    g_ab_prev = torch.copy(g_ab_prev) # Copy previous potential to compute error
     g_ab = damping * softmin(eps, C_yx, (a_log + f_ba / eps))
+    # sinkhorn_error = \sum_i b_i*|1 - v_i^k / v_i^{k+1}|
+    sinkhorn_error = torch.sum(torch.exp(b_log)*torch.abs(1 - g_ab_prev/g_ab))
 
     if debias:
-        return f_aa, g_bb, g_ab, f_ba
+        return sinkhorn_error, (f_aa, g_bb, g_ab, f_ba)
     else:
-        return None, None, g_ab, f_ba
+        return sinkhorn_error, (None, None, g_ab, f_ba)

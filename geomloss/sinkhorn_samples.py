@@ -193,7 +193,7 @@ def sinkhorn_tensorized(
     )
 
     # Use an optimal transport solver to retrieve the dual potentials:
-    f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
+    sinkhorn_error, potentials = sinkhorn_loop(
         softmin_tensorized,
         log_weights(a),
         log_weights(b),
@@ -206,8 +206,10 @@ def sinkhorn_tensorized(
         debias=debias,
     )
 
+    f_aa, g_bb, g_ab, f_ba = potentials 
+
     # Optimal transport cost:
-    return sinkhorn_cost(
+    return sinkhorn_error, sinkhorn_cost(
         eps,
         rho,
         a,
@@ -404,7 +406,7 @@ def sinkhorn_online(
     if not SinkhornMaxIter is None:
         eps_list = [blur**2]*SinkhornMaxIter
 
-    f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
+    sinkhorn_error, potentials = sinkhorn_loop(
         softmin,
         log_weights(a),
         log_weights(b),
@@ -418,7 +420,9 @@ def sinkhorn_online(
         a_init=a_init,
     )
 
-    return sinkhorn_cost(
+    f_aa, g_bb, g_ab, f_ba = potentials
+
+    return sinkhorn_error, sinkhorn_cost(
         eps,
         rho,
         a,
@@ -660,7 +664,7 @@ def sinkhorn_multiscale(
         (y, x.detach(), None, None, None),
     ]
 
-    f_aa, g_bb, g_ab, f_ba = sinkhorn_loop(
+    sinkhorn_error, potentials = sinkhorn_loop(
         softmin,
         a_logs,
         b_logs,
@@ -677,6 +681,8 @@ def sinkhorn_multiscale(
         extrapolate=extrapolate,
         debias=debias,
     )
+
+    f_aa, g_bb, g_ab, f_ba = potentials
 
     cost = sinkhorn_cost(
         eps, rho, a, b, f_aa, g_bb, g_ab, f_ba, debias=debias, potentials=potentials
