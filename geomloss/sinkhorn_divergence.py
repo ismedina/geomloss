@@ -536,7 +536,7 @@ def sinkhorn_loop(
                     C_xx_fine, C_yy_fine = C_xxs[k + 1], C_yys[k + 1]
 
                 last_extrapolation = False  # No need to re-extrapolate after the loop
-                torch.autograd.set_grad_enabled(True)
+                # torch.autograd.set_grad_enabled(True)
 
             else:  # It's worth investing some time on kernel truncation...
                 # The lines below implement the Kernel truncation trick,
