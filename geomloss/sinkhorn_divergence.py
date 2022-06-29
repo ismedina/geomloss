@@ -650,8 +650,12 @@ def sinkhorn_loop(
     f_ba = damping * softmin(eps, C_xy, (b_log + g_ab / eps)) 
     g_ab_prev = torch.clone(g_ab) # Copy previous potential to compute error
     # g_ab_prev.detach() TODO: needed? It is already detached, right?
+    # IM: One can check that the error in the coupling _before_ computing the 
+    # potential in the next line is given by the formula
+    # sinkhorn_error = \sum_i b_i*|1 - g_i^k / g_i^{k+1}|
+    # where k denotes the iteration. Thus, by saving g_ab_prev
+    # we can compute an estimate of the error in the following line. 
     g_ab = damping * softmin(eps, C_yx, (a_log + f_ba / eps))
-    # sinkhorn_error = \sum_i b_i*|1 - v_i^k / v_i^{k+1}|
     sinkhorn_error = torch.sum(torch.exp(b_log)*torch.abs(1 - g_ab_prev/g_ab))
 
     if debias:
