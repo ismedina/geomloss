@@ -361,7 +361,7 @@ def softmin_two_grids(eps, C_xy, h_y):
             kA_log_ij = a_log_j - (x_i - x_j) ** 2  # (B * Z, M, N, 1)
 
         kA_log = kA_log_ij.logsumexp(dim=2)  # (B * Z, M, 1)
-        print("kA_log: ", kA_log.view(-1))
+        print("kA_log: ", kA_log.reshape(-1))
         
         # The softmin is always performed along the last axis. This is because outside of this function the dimensions are permuted.
         # The dimensions after the sofmin can be derived from the permutation pattern in the main function. 
