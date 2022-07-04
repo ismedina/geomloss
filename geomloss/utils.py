@@ -337,6 +337,8 @@ def softmin_two_grids(eps, C_xy, h_y):
     #x = torch.arange(N).type_as(h_y) / N
     p, dx, Ms = C_xy
 
+    print("Ms: ", Ms, "; Ns: ", Ns)
+
     if p == 1: 
         blur = eps
     elif p == 2: 
@@ -407,5 +409,5 @@ def softmin_two_grids(eps, C_xy, h_y):
             [0, 1, 4, 3, 2]
         )  # Act on dim 2
         # p -> (M2, M1, N0) -> s -> (M2, M1, M0) -> p -> (M0, M1, M2)
-
+    assert False
     return -eps * h_y 
