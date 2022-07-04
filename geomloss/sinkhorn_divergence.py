@@ -273,7 +273,7 @@ def sinkhorn_loop(
     extrapolate=None,
     debias=True,
     last_extrapolation=True,
-    a_init=0,
+    a_init=None,
 ):
     r"""Implements the (possibly multiscale) symmetric Sinkhorn loop,
     with the epsilon-scaling (annealing) heuristic.
@@ -389,7 +389,9 @@ def sinkhorn_loop(
             Defaults to True.
 
     Returns:
-        4-uple of Tensors: The four optimal dual potentials
+        2-uple consisting of: 
+            * sinkhorn_error
+            * 4-uple of Tensors: The four optimal dual potentials
             `(f_aa, g_bb, g_ab, f_ba)` that are respectively
             supported by the first, second, second and first input measures
             and associated to the "a <-> a", "b <-> b",
@@ -461,8 +463,10 @@ def sinkhorn_loop(
     #       The algorithm was originally written with this convolution
     #       - but in this implementation, we use "softmin" for the sake of simplicity.
     #g_ab = damping * softmin(eps, C_yx, a_log)  # a -> b
-    f_ba = a_init
-    #f_ba = damping * softmin(eps, C_xy, b_log)  # b -> a
+    if not a_init is None:
+        f_ba = a_init
+    else:
+        f_ba = damping * softmin(eps, C_xy, b_log)  # b -> a  
     g_ab = damping * softmin(eps, C_yx, a_log + f_ba / eps)  # a -> b
 
     if debias:
@@ -532,7 +536,7 @@ def sinkhorn_loop(
                     C_xx_fine, C_yy_fine = C_xxs[k + 1], C_yys[k + 1]
 
                 last_extrapolation = False  # No need to re-extrapolate after the loop
-                torch.autograd.set_grad_enabled(True)
+                # torch.autograd.set_grad_enabled(True)
 
             else:  # It's worth investing some time on kernel truncation...
                 # The lines below implement the Kernel truncation trick,
@@ -644,9 +648,17 @@ def sinkhorn_loop(
     # IM: I think that if autograd is True we could dettach in this last iteration 
     # and the rest should work nicely.
     f_ba = damping * softmin(eps, C_xy, (b_log + g_ab / eps)) 
+    g_ab_prev = torch.clone(g_ab) # Copy previous potential to compute error
+    # g_ab_prev.detach() TODO: needed? It is already detached, right?
+    # IM: One can check that the error in the coupling _before_ computing the 
+    # potential in the next line is given by the formula
+    # sinkhorn_error = \sum_i b_i*|1 - v_i^k / v_i^{k+1}|
+    # where k denotes the iteration and v the scaling factor. Thus, by saving g_ab_prev
+    # we can compute an estimate of the error in the following line. 
     g_ab = damping * softmin(eps, C_yx, (a_log + f_ba / eps))
+    sinkhorn_error = torch.sum(torch.exp(b_log)*torch.abs(1 - torch.exp((g_ab_prev - g_ab)/eps)))
 
     if debias:
-        return f_aa, g_bb, g_ab, f_ba
+        return sinkhorn_error, (f_aa, g_bb, g_ab, f_ba)
     else:
-        return None, None, g_ab, f_ba
+        return sinkhorn_error, (None, None, g_ab, f_ba)

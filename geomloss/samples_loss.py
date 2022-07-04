@@ -190,7 +190,7 @@ class SamplesLoss(Module):
         verbose=False,
         backend="auto",
         a_init=0,
-        SinkhornMaxIter=None,
+        inner_iter=None,
     ):
 
         super(SamplesLoss, self).__init__()
@@ -209,7 +209,7 @@ class SamplesLoss(Module):
         self.potentials = potentials
         self.verbose = verbose
         self.a_init = a_init
-        self.SinkhornMaxIter = SinkhornMaxIter
+        self.inner_iter = inner_iter
 
     def forward(self, *args):
         """Computes the loss between sampled measures.
@@ -286,15 +286,15 @@ class SamplesLoss(Module):
             labels_y=l_y,
             verbose=self.verbose,
             a_init = self.a_init,
-            SinkhornMaxIter = self.SinkhornMaxIter,
+            inner_iter = self.inner_iter,
         )
 
         # Make sure that the output has the correct shape ------------------------------------
         if (
             self.potentials
         ):  # Return some dual potentials (= test functions) sampled on the input measures
-            F, G = values
-            return F.view_as(α), G.view_as(β)
+            error, (F, G) = values
+            return error, (F.view_as(α), G.view_as(β))
 
         else:  # Return a scalar cost value
             if backend in ["multiscale"]:  # KeOps backends return a single scalar value
