@@ -346,14 +346,16 @@ def softmin_two_grids(eps, C_xy, h_y):
     else:
         raise NotImplementedError()
 
+
     def softmin(a_log, axis): 
         # `a_log` is data, `axis` is dimension along which we compute the softmin
         a_log = a_log.contiguous()
         M = Ms[axis]
         N = Ns[axis]
+        dx_eff = torch.tensor(dx/blur).type_as(a_log) # Effective length-scale
         a_log_j = LazyTensor(a_log.view(-1, 1, N, 1))
-        x_i = torch.arange(M).type_as(a_log) * (dx/blur) # Assume same spacing for input and output grids
-        x_j = torch.arange(N).type_as(a_log) * (dx/blur)
+        x_i = torch.arange(M).type_as(a_log) * dx_eff # Assume same spacing for input and output grids
+        x_j = torch.arange(N).type_as(a_log) * dx_eff
         x_i = LazyTensor(x_i.view(1, M, 1, 1))
         x_j = LazyTensor(x_j.view(1, 1, N, 1))
         
